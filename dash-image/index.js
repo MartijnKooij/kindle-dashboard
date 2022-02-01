@@ -6,23 +6,25 @@ const keys = {
   private_key: process.env.private_key.replace(/\\n/g, '\n')
 };
 
+const calendarIdValues = process.env.calendar_ids.split(';');
+
 class DashboardImageGenerator {
   get calendarIds() {
     return [
       {
-        id: 'martijnkooijsoftware@gmail.com',
+        id: calendarIdValues[0],
         name: 'Martijn'
       },
       {
-        id: 'eljahekman@gmail.com',
+        id: calendarIdValues[1],
         name: 'Elja'
       },
       {
-        id: 'leannekooij@gmail.com',
+        id: calendarIdValues[2],
         name: 'Leanne'
       },
       {
-        id: '5si1ok4jaib742kl49i9d0umi8@group.calendar.google.com',
+        id: calendarIdValues[3],
         name: 'Familie'
       }
     ];
