@@ -104,3 +104,6 @@ dist
 .tern-port
 kindle-339616-1bd96e3684a7.json
 events.html
+dist
+dash-image/index.js
+*.zip

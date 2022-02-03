@@ -5,14 +5,19 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "node copy-node-modules.js && copy /y index.js dist"
+    "build": "rmdir dist /s /q && del kindle-dashboard-image.zip && node copy-node-modules.js && copy /y template.html dist && tsc && node zip-dist.js"
   },
   "author": "Martijn Kooij",
-  "license": "Apache License",
+  "license": "Apache-2.0",
   "dependencies": {
-    "googleapis": "^92.0.0"
+    "@googleapis/calendar": "1.0.2",
+    "pngjs": "6.0.0"
   },
   "devDependencies": {
+    "@types/aws-lambda": "8.10.92",
+    "@types/node": "17.0.14",
+    "@types/pngjs": "6.0.1",
+    "aws-sdk": "^2.906.0",
     "copy-node-modules": "^1.1.1",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
