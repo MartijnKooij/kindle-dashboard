@@ -40,6 +40,12 @@ class DashboardImageGenerator {
 
     const outputHtml = this.generateHtml(groupedEvents, template);
 
+    if (process.env.debug) {
+      fs.writeFileSync('./events.html', outputHtml);
+
+      return Promise.resolve('LOCAL SUCCESS');
+    }
+
     const base64Image = await this.takeSnapshot(outputHtml);
     const pngBytes = Buffer.from(base64Image, 'base64');
     const png = PNG.sync.read(pngBytes);
@@ -90,20 +96,18 @@ class DashboardImageGenerator {
     groupedEvents.forEach((group) => {
       eventsHtml.push(`<h2>${group.date}</h2>`);
       group.events.forEach((event) => {
-        const time = `${event.start
-          .getHours()
-          .toString()
-          .padStart(2, "0")}:${event.start
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}`;
+        const time = `${event.start.getHours().toString().padStart(2, "0")}:${event.start.getMinutes().toString().padStart(2, "0")}`;
         const name = this.getCalendarIds().find(
           (c) => c.id === event.calendarId
         ).name;
         eventsHtml.push(
-          `<div class='event owner-${name.toLowerCase()}'><span class='title'>${time} - ${
-            event.summary
-          }</span><span class='subtitle'>${name}</span></div>`
+          `<div class='event owner-${name.toLowerCase()}'>
+            <div class='details'>
+              <span class='title'>${time} - ${event.summary}</span>
+              <span class='subtitle'>${name}</span>
+            </div>
+            <span class='icon'></span>
+          </div>`
         );
       });
     });
@@ -144,7 +148,7 @@ class DashboardImageGenerator {
     });
 
     const calendar = googleCalendarApi.calendar({ version: "v3", auth });
-    const upcomingEvents = [].concat
+    const upcomingEvents = ([].concat
       .apply(
         [],
         await Promise.all(
@@ -152,16 +156,14 @@ class DashboardImageGenerator {
             this.getEventsForCalendar(calendar, c.id)
           )
         )
-      )
-      .sort((a, b) => a.start - b.start)
-      .filter(
-        (a) => (a.start.getTime() - Date.now()) / (3600 * 1000 * 24) <= 4
-      );
+      ) as CalendarEntry[])
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .slice(0, 6); // Return the next 6 events
 
     return upcomingEvents;
   }
 
-  async getEventsForCalendar(calendar, calendarId) {
+  async getEventsForCalendar(calendar: googleCalendarApi.calendar_v3.Calendar, calendarId: string): Promise<CalendarEntry[]> {
     const response = await calendar.events.list({
       calendarId: calendarId,
       timeMin: new Date().toISOString(),
@@ -174,19 +176,26 @@ class DashboardImageGenerator {
     if (events.length) {
       return events.map((event) => {
         const start = new Date(
-          Date.parse(event.start.dateTime || event.start.date)
+          // Lame trick to add the hour because my lambda is running in a different timezone...
+          Date.parse(event.start.dateTime || event.start.date) + (3600 * 1000)
         );
 
         return {
           start: start,
           calendarId: calendarId,
           summary: event.summary,
-        };
+        } as CalendarEntry;
       });
     } else {
       return [];
     }
   }
+}
+
+class CalendarEntry {
+  start: Date;
+  calendarId: string;
+  summary: string;
 }
 
 export const kindleDashboardImage = async () => {

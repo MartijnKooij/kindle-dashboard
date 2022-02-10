@@ -5,35 +5,61 @@
   <title>Kindle Dashboard</title>
   <meta charset="utf-8" />
   <style>
+    body {
+      padding-top: 30px;
+    }
+
     body * {
       font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
+    h2, .event {
+      font-size: 30px;
+      font-weight: 500;
+    }
+
     h2 {
+      text-transform: uppercase;
       margin: 6px;
       padding: 6px;
-      color: #333333;
+      color: #777777;
     }
 
     .event {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       border: solid 1px;
       border-left: solid 6px;
       margin: 6px;
       padding: 6px;
     }
 
-    .owner-martijn {
-      color: #333333;
+    .details {
+      display: flex;
+      flex-direction: column;
+      width: 90%;
     }
-    .owner-elja {
-      color: #777777;
+
+    .subtitle {
+      text-transform: uppercase;
     }
-    .owner-leanne {
-      color: #555555;
+
+    .icon {
+      background-repeat: no-repeat;
+      flex: auto;
     }
-    .owner-familie {
-      color: #111111;
+
+    .owner-martijn .icon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgc3R5bGU9ImNvbG9yOiAjNzc3Nzc3IiBmb2N1c2FibGU9ImZhbHNlIiBkYXRhLXByZWZpeD0iZmFzIiBkYXRhLWljb249ImxhcHRvcC1jb2RlIiBjbGFzcz0ic3ZnLWlubGluZS0tZmEgZmEtbGFwdG9wLWNvZGUgZmEtdy0yMCIgcm9sZT0iaW1nIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NDAgNTEyIj48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik0yNTUuMDMgMjYxLjY1YzYuMjUgNi4yNSAxNi4zOCA2LjI1IDIyLjYzIDBsMTEuMzEtMTEuMzFjNi4yNS02LjI1IDYuMjUtMTYuMzggMC0yMi42M0wyNTMuMjUgMTkybDM1LjcxLTM1LjcyYzYuMjUtNi4yNSA2LjI1LTE2LjM4IDAtMjIuNjNsLTExLjMxLTExLjMxYy02LjI1LTYuMjUtMTYuMzgtNi4yNS0yMi42MyAwbC01OC4zNCA1OC4zNGMtNi4yNSA2LjI1LTYuMjUgMTYuMzggMCAyMi42M2w1OC4zNSA1OC4zNHptOTYuMDEtMTEuM2wxMS4zMSAxMS4zMWM2LjI1IDYuMjUgMTYuMzggNi4yNSAyMi42MyAwbDU4LjM0LTU4LjM0YzYuMjUtNi4yNSA2LjI1LTE2LjM4IDAtMjIuNjNsLTU4LjM0LTU4LjM0Yy02LjI1LTYuMjUtMTYuMzgtNi4yNS0yMi42MyAwbC0xMS4zMSAxMS4zMWMtNi4yNSA2LjI1LTYuMjUgMTYuMzggMCAyMi42M0wzODYuNzUgMTkybC0zNS43MSAzNS43MmMtNi4yNSA2LjI1LTYuMjUgMTYuMzggMCAyMi42M3pNNjI0IDQxNkgzODEuNTRjLS43NCAxOS44MS0xNC43MSAzMi0zMi43NCAzMkgyODhjLTE4LjY5IDAtMzMuMDItMTcuNDctMzIuNzctMzJIMTZjLTguOCAwLTE2IDcuMi0xNiAxNnYxNmMwIDM1LjIgMjguOCA2NCA2NCA2NGg1MTJjMzUuMiAwIDY0LTI4LjggNjQtNjR2LTE2YzAtOC44LTcuMi0xNi0xNi0xNnpNNTc2IDQ4YzAtMjYuNC0yMS42LTQ4LTQ4LTQ4SDExMkM4NS42IDAgNjQgMjEuNiA2NCA0OHYzMzZoNTEyVjQ4em0tNjQgMjcySDEyOFY2NGgzODR2MjU2eiI+PC9wYXRoPjwvc3ZnPg==');
+    }
+    .owner-elja .icon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgc3R5bGU9ImNvbG9yOiAjNzc3Nzc3IiBmb2N1c2FibGU9ImZhbHNlIiBkYXRhLXByZWZpeD0iZmFzIiBkYXRhLWljb249ImJvb2siIGNsYXNzPSJzdmctaW5saW5lLS1mYSBmYS1ib29rIGZhLXctMTQiIHJvbGU9ImltZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgNDQ4IDUxMiI+PHBhdGggZmlsbD0iY3VycmVudENvbG9yIiBkPSJNNDQ4IDM2MFYyNGMwLTEzLjMtMTAuNy0yNC0yNC0yNEg5NkM0MyAwIDAgNDMgMCA5NnYzMjBjMCA1MyA0MyA5NiA5NiA5NmgzMjhjMTMuMyAwIDI0LTEwLjcgMjQtMjR2LTE2YzAtNy41LTMuNS0xNC4zLTguOS0xOC43LTQuMi0xNS40LTQuMi01OS4zIDAtNzQuNyA1LjQtNC4zIDguOS0xMS4xIDguOS0xOC42ek0xMjggMTM0YzAtMy4zIDIuNy02IDYtNmgyMTJjMy4zIDAgNiAyLjcgNiA2djIwYzAgMy4zLTIuNyA2LTYgNkgxMzRjLTMuMyAwLTYtMi43LTYtNnYtMjB6bTAgNjRjMC0zLjMgMi43LTYgNi02aDIxMmMzLjMgMCA2IDIuNyA2IDZ2MjBjMCAzLjMtMi43IDYtNiA2SDEzNGMtMy4zIDAtNi0yLjctNi02di0yMHptMjUzLjQgMjUwSDk2Yy0xNy43IDAtMzItMTQuMy0zMi0zMiAwLTE3LjYgMTQuNC0zMiAzMi0zMmgyODUuNGMtMS45IDE3LjEtMS45IDQ2LjkgMCA2NHoiPjwvcGF0aD48L3N2Zz4=');
+    }
+    .owner-leanne .icon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgc3R5bGU9ImNvbG9yOiAjNzc3Nzc3IiBmb2N1c2FibGU9ImZhbHNlIiBkYXRhLXByZWZpeD0iZmFzIiBkYXRhLWljb249ImZ1dGJvbCIgY2xhc3M9InN2Zy1pbmxpbmUtLWZhIGZhLWZ1dGJvbCBmYS13LTE2IiByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTUwNCAyNTZjMCAxMzYuOTY3LTExMS4wMzMgMjQ4LTI0OCAyNDhTOCAzOTIuOTY3IDggMjU2IDExOS4wMzMgOCAyNTYgOHMyNDggMTExLjAzMyAyNDggMjQ4em0tNDggMGwtLjAwMy0uMjgyLTI2LjA2NCAyMi43NDEtNjIuNjc5LTU4LjUgMTYuNDU0LTg0LjM1NSAzNC4zMDMgMy4wNzJjLTI0Ljg4OS0zNC4yMTYtNjAuMDA0LTYwLjA4OS0xMDAuNzA5LTczLjE0MWwxMy42NTEgMzEuOTM5TDI1NiAxMzlsLTc0Ljk1My00MS41MjUgMTMuNjUxLTMxLjkzOWMtNDAuNjMxIDEzLjAyOC03NS43OCAzOC44Ny0xMDAuNzA5IDczLjE0MWwzNC41NjUtMy4wNzMgMTYuMTkyIDg0LjM1NS02Mi42NzggNTguNS0yNi4wNjQtMjIuNzQxLS4wMDMuMjgyYzAgNDMuMDE1IDEzLjQ5NyA4My45NTIgMzguNDcyIDExNy45OTFsNy43MDQtMzMuODk3IDg1LjEzOCAxMC40NDcgMzYuMzAxIDc3LjgyNi0yOS45MDIgMTcuNzg2YzQwLjIwMiAxMy4xMjIgODQuMjkgMTMuMTQ4IDEyNC41NzIgMGwtMjkuOTAyLTE3Ljc4NiAzNi4zMDEtNzcuODI2IDg1LjEzOC0xMC40NDcgNy43MDQgMzMuODk3QzQ0Mi41MDMgMzM5Ljk1MiA0NTYgMjk5LjAxNSA0NTYgMjU2em0tMjQ4LjEwMiA2OS41NzFsLTI5Ljg5NC05MS4zMTJMMjU2IDE3Ny43MzJsNzcuOTk2IDU2LjUyNy0yOS42MjIgOTEuMzEyaC05Ni40NzZ6Ij48L3BhdGg+PC9zdmc+');
+    }
+    .owner-familie .icon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyBhcmlhLWhpZGRlbj0idHJ1ZSIgc3R5bGU9ImNvbG9yOiAjNzc3Nzc3IiBmb2N1c2FibGU9ImZhbHNlIiBkYXRhLXByZWZpeD0iZmFzIiBkYXRhLWljb249ImhlYXJ0IiBjbGFzcz0ic3ZnLWlubGluZS0tZmEgZmEtaGVhcnQgZmEtdy0xNiIgcm9sZT0iaW1nIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJjdXJyZW50Q29sb3IiIGQ9Ik00NjIuMyA2Mi42QzQwNy41IDE1LjkgMzI2IDI0LjMgMjc1LjcgNzYuMkwyNTYgOTYuNWwtMTkuNy0yMC4zQzE4Ni4xIDI0LjMgMTA0LjUgMTUuOSA0OS43IDYyLjZjLTYyLjggNTMuNi02Ni4xIDE0OS44LTkuOSAyMDcuOWwxOTMuNSAxOTkuOGMxMi41IDEyLjkgMzIuOCAxMi45IDQ1LjMgMGwxOTMuNS0xOTkuOGM1Ni4zLTU4LjEgNTMtMTU0LjMtOS44LTIwNy45eiI+PC9wYXRoPjwvc3ZnPg==');
     }
   </style>
 </head>
