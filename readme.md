@@ -5,5 +5,7 @@ Copy dashboard to kindle from the `./kindle-dash` sub folder in this repo `scp -
 ## SSH
 SSH to kindle `ssh root@192.168.15.244`
 
+Disable the status bar using `lipc-set-prop com.lab126.pillow disableEnablePillow disable`
+
 ## Build and deploy
 Build dash-image with `yarn build` and upload the zip file to the AWS lambda console
