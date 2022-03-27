@@ -95,8 +95,10 @@ class DashboardImageGenerator {
     const eventsHtml = [];
     groupedEvents.forEach((group) => {
       eventsHtml.push(`<h2>${group.date}</h2>`);
-      group.events.forEach((event) => {
-        const time = `${event.start.getHours().toString().padStart(2, "0")}:${event.start.getMinutes().toString().padStart(2, "0")}`;
+      group.events.forEach((event: CalendarEntry) => {
+        const localDateTime = event.start.toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' });
+        const localTime = localDateTime.split(' ')[1].split(':');
+        const time = `${localTime[0].padStart(2, "0")}:${localTime[1].padStart(2, "0")}`;
         const name = this.getCalendarIds().find(
           (c) => c.id === event.calendarId
         ).name;
@@ -119,10 +121,15 @@ class DashboardImageGenerator {
     return output;
   }
 
-  groupEvents(events) {
+  groupEvents(events: CalendarEntry[]) {
     const groups = events.reduce((groups, event) => {
-      const options = { weekday: "long", month: "long", day: "numeric" };
-      const date = event.start.toLocaleDateString("nl-NL", options);
+      const date = event.start.toLocaleString('nl-NL', {
+        timeZone: 'Europe/Amsterdam',
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      });
+
       if (!groups[date]) {
         groups[date] = [];
       }
@@ -175,13 +182,8 @@ class DashboardImageGenerator {
     const events = response.data.items;
     if (events.length) {
       return events.map((event) => {
-        const start = new Date(
-          // Lame trick to add the hour because my lambda is running in a different timezone...
-          Date.parse(event.start.dateTime || event.start.date) + (3600 * 1000)
-        );
-
         return {
-          start: start,
+          start: new Date(event.start.dateTime || event.start.date),
           calendarId: calendarId,
           summary: event.summary,
         } as CalendarEntry;

@@ -27,6 +27,7 @@ init() {
   echo "Starting dashboard with $REFRESH_SCHEDULE refresh..."
 
   # /etc/init.d/framework stop
+  lipc-set-prop com.lab126.pillow disableEnablePillow disable
   initctl stop webreader > /dev/null 2>&1
   echo powersave > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
   lipc-set-prop com.lab126.powerd preventScreenSaver 1
