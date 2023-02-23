@@ -4,6 +4,8 @@ Copy dashboard to kindle from the `./kindle-dash` sub folder in this repo `scp -
 
 ## SSH
 SSH to kindle `ssh root@192.168.15.244`
+On Windows it sometimes fails to connect, check the network settings and assign the IP 192.168.15.201 to the network.
+No clue why it's that IP, source: https://www.mobileread.com/forums/showthread.php?t=340208
 
 Disable the status bar using `lipc-set-prop com.lab126.pillow disableEnablePillow disable`
 
