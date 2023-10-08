@@ -1,7 +1,12 @@
 import * as googleCalendarApi from "@googleapis/calendar";
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { DateTime } from 'luxon';
 import * as fs from "fs";
-import * as AWS from "aws-sdk";
 import { PNG } from "pngjs";
+import * as https from 'https';
+import jsdom from "jsdom";
+const { JSDOM } = jsdom;
 
 const keys = {
   client_email: process.env.client_email,
@@ -9,6 +14,7 @@ const keys = {
 };
 
 const calendarIdValues = process.env.calendar_ids.split(";");
+const footballEventId = 'football';
 
 class DashboardImageGenerator {
   getCalendarIds() {
@@ -16,24 +22,42 @@ class DashboardImageGenerator {
       {
         id: calendarIdValues[0],
         name: "Martijn",
+        isGoogleCalendar: true
       },
       {
         id: calendarIdValues[1],
         name: "Elja",
+        isGoogleCalendar: true
       },
       {
         id: calendarIdValues[2],
         name: "Leanne",
+        isGoogleCalendar: true
       },
       {
         id: calendarIdValues[3],
         name: "Familie",
+        isGoogleCalendar: true
+      },
+      {
+        id: footballEventId,
+        name: "Voetbal",
+        isGoogleCalendar: false
       },
     ];
   }
 
   async generateImage() {
-    const events = await this.getCalendarData();
+    const footballEvent: CalendarEntry = await this.getFootballEvent();
+    let events = await this.getCalendarData();
+
+    if (footballEvent) {
+      events.push(footballEvent);
+      events = events
+        .sort((a, b) => a.start.getTime() - b.start.getTime())
+        .slice(0, 6); // Return the next 6 events
+    }
+
     const template = fs.readFileSync("./template.html").toString();
 
     const groupedEvents = this.groupEvents(events);
@@ -49,26 +73,35 @@ class DashboardImageGenerator {
     const base64Image = await this.takeSnapshot(outputHtml);
     const pngBytes = Buffer.from(base64Image, 'base64');
     const png = PNG.sync.read(pngBytes);
-    const blackAndWhite = PNG.sync.write(png, {colorType: 0});
+    const blackAndWhite = PNG.sync.write(png, { colorType: 0 });
 
-    const s3 = new AWS.S3();
-    const params = {
-      Body: blackAndWhite,
+    const client = new S3Client({
+      region: 'eu-west-1'
+    });
+
+    const command = new PutObjectCommand({
       Bucket: "kindle-dashboard.martijnkooij.nl",
       Key: "dashboard.png",
-    };
-    return new Promise((resolve, reject) =>
-      s3.putObject(params, (error, data) => {
-        if (error) reject(error);
-        else resolve("SUCCESS");
-      })
-    );
+      Body: blackAndWhite,
+      ContentType: 'image/png'
+    });
+
+    try {
+      await client.send(command);
+      return 'SUCCESS';
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   }
 
-  private takeSnapshot(outputHtml: string): Promise<string> {
-    const lambda = new AWS.Lambda({ region: "eu-west-1" });
-    const params = {
-      FunctionName: "browser-snapshots",
+  private async takeSnapshot(outputHtml: string): Promise<string> {
+    const client = new LambdaClient({
+      region: 'eu-west-1'
+    });
+
+    const command = new InvokeCommand({
+      FunctionName: 'browser-snapshots',
       Payload: JSON.stringify([
         {
           inputType: 0,
@@ -80,15 +113,12 @@ class DashboardImageGenerator {
             omitBackground: false,
           },
         },
-      ]),
-    };
+      ])
+    });
 
-    return new Promise((resolve, reject) =>
-      lambda.invoke(params, (error, data) => {
-        if (error) reject(JSON.stringify(error));
-        else resolve(JSON.parse(data.Payload.toString())[0].outputData);
-      })
-    );
+    const { Payload } = await client.send(command);
+    const result = Buffer.from(Payload).toString();
+    return JSON.parse(result)[0].outputData
   }
 
   generateHtml(groupedEvents, template) {
@@ -159,7 +189,7 @@ class DashboardImageGenerator {
       .apply(
         [],
         await Promise.all(
-          this.getCalendarIds().map((c) =>
+          this.getCalendarIds().filter(c => c.isGoogleCalendar).map((c) =>
             this.getEventsForCalendar(calendar, c.id)
           )
         )
@@ -191,6 +221,65 @@ class DashboardImageGenerator {
     } else {
       return [];
     }
+  }
+
+  private async getFootballEvent(): Promise<CalendarEntry> {
+    try {
+      const htmlData = await this.getUrlContents('https://www.devdoorn.nl/dev-doorn-mo15-1-zaterdag-speeldag-vrouw');
+      const htmlDocument = new JSDOM(htmlData);
+      const XPathResultANY_TYPE = 0;
+      const headings = htmlDocument.window.document.evaluate("//h4[contains(., 'Programma')]", htmlDocument.window.document, null, XPathResultANY_TYPE, null);
+      const programHeading = headings.iterateNext();
+      const programContainer = programHeading.parentNode.parentNode.parentNode;
+      const programTable = programContainer.querySelectorAll('table tr');
+      const nextMatch = programTable[1].querySelectorAll('td');
+      const matchLabel = nextMatch[2].textContent.replace(/ MO15-[\d]/g, '');
+
+      return {
+        start: this.parseDutchDate(nextMatch[0].textContent),
+        calendarId: footballEventId,
+        summary: matchLabel + (matchLabel.startsWith('DEV') ? ' (THUIS)' : ' (UIT)')
+      } as CalendarEntry;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  private async getUrlContents(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      let data = ''
+
+      https.get(url, res => {
+        res.on('data', chunk => { data += chunk })
+        res.on('end', () => {
+          resolve(data);
+        });
+        res.on('error', (e) => reject(e));
+      });
+    });
+  }
+
+  private parseDutchDate(dutchDateStr): Date {
+    const monthMapping = {
+      jan: 1, feb: 2, mrt: 3, apr: 4, mei: 5, jun: 6,
+      jul: 7, aug: 8, sep: 9, okt: 10, nov: 11, dec: 12
+    };
+    const [day, monthStr, timeStr] = dutchDateStr.split(' ');
+    const [hour, minute] = timeStr.split(':').map(Number);
+    const month = monthMapping[monthStr.toLowerCase().replace('.', '')];
+
+    const dutchDateTime = DateTime.fromObject({
+      year: new Date().getFullYear(),
+      day,
+      month,
+      hour,
+      minute
+    }, {
+      zone: 'Europe/Amsterdam', // Specify the Dutch time zone
+    });
+
+    return dutchDateTime.toJSDate();
   }
 }
 

@@ -107,3 +107,4 @@ events.html
 dist
 dash-image/index.js
 *.zip
+dash-image/local.js
