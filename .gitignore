@@ -108,3 +108,4 @@ dist
 dash-image/index.js
 *.zip
 **/local.js
+.env
