@@ -225,7 +225,11 @@ class DashboardImageGenerator {
 
   private async getFootballEvent(): Promise<CalendarEntry> {
     try {
-      const htmlData = await this.getUrlContents('https://www.devdoorn.nl/dev-doorn-mo15-1-zaterdag-speeldag-vrouw');
+      const url = process.env.FOOTBALL_EVENT_URL;
+      if (!url) {
+        throw new Error('FOOTBALL_EVENT_URL environment variable is not set');
+      }
+      const htmlData = await this.getUrlContents(url);
       const htmlDocument = new JSDOM(htmlData);
       const XPathResultANY_TYPE = 0;
       const headings = htmlDocument.window.document.evaluate("//h4[contains(., 'Programma')]", htmlDocument.window.document, null, XPathResultANY_TYPE, null);

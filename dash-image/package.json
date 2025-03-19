@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "rmdir dist /s /q && del /q kindle-dashboard-image.zip && node copy-node-modules.js && copy /y template.html dist && tsc && node zip-dist.js",
+    "build": "node pre-build.js && node copy-node-modules.js && copy /y template.html dist && tsc && node zip-dist.js",
     "go": "tsc && node local.js"
   },
   "author": "Martijn Kooij",

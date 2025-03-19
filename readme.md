@@ -11,3 +11,6 @@ Disable the status bar using `lipc-set-prop com.lab126.pillow disableEnablePillo
 
 ## Build and deploy
 Build dash-image with `yarn build` and upload the zip file to the AWS lambda console
+
+## Trouble shooting
+If an event remains blank / has an undefined title it might be marked as private.
